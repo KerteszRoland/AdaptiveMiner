@@ -83,8 +83,9 @@ def main():
         path = fr"C:\Users\{os.getlogin()}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\AdaptiveMiner.lnk"
         name = "main.pyw"
         this_file_path = os.path.join(os.path.abspath('.'), name)
-        winshell.CreateShortcut(path, this_file_path, Arguments="", StartIn=os.path.abspath('.'), Icon=(os.path.abspath('./icons/pickaxe.ico'), 0), Description="AdaptiveMinerBat")
-    
+        winshell.CreateShortcut(path, this_file_path, Arguments="", StartIn=os.path.abspath(
+            '.'), Icon=(os.path.abspath('./icons/pickaxe.ico'), 0), Description="AdaptiveMinerBat")
+
     def tray_stop_miner(tray):
         miner.pause()
 
@@ -96,7 +97,7 @@ def main():
         miner.terminated = True
 
     def tray_open_stats(tray):
-        webbrowser.open_new("http://127.0.0.1:4067/trex")
+        webbrowser.open_new(os.environ.get("DASHBOARD"))
 
     menu_options = (("Start miner", None, tray_start_miner), ("Stop miner",
                     None, tray_stop_miner), ("Statistics", None, tray_open_stats), ("Run at Startup", None, tray_run_at_startup))
@@ -104,6 +105,7 @@ def main():
                           menu_options, on_quit=tray_quit)
     systray.start()
 
+    check_freq = os.environ.get("CHECK_FREQ")
     triggering_processes = os.environ.get("EXES").split(";")
     miner = Miner(
         fr"{os.environ.get('MINER_PATH')}", systray)
@@ -115,7 +117,7 @@ def main():
                     miner.stop()
                 else:
                     miner.start()
-                sleep(10)
+                sleep(check_freq)
     except Exception as e:
         miner.pause()
         systray.shutdown()
