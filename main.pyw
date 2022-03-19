@@ -50,6 +50,9 @@ class Miner:
         self.is_paused = False
         self.terminated = False
         self.tray = tray
+        self.dashboard_url = os.environ.get("DASHBOARD_URL")
+        self.afterburner_miner = os.environ.get("AFTERBURNER_MINER_SHORTCUT")
+        self.afterburner_idle = os.environ.get("AFTERBURNER_IDLE_SHORTCUT")
 
     def start(self):
         if self.miner_proc == None and not self.is_paused:
@@ -58,7 +61,7 @@ class Miner:
                 command, stdout=None, shell=True, creationflags=CREATE_NO_WINDOW)
             print("---Started Miner---")
             self.tray.update(icon="icons/pickaxe_on.ico")
-            keyboard.press_and_release('ctrl+shift+alt+k')
+            keyboard.press_and_release(self.afterburner_miner)
 
     def stop(self):
         if self.miner_proc != None:
@@ -66,7 +69,7 @@ class Miner:
             self.miner_proc = None
             print("---Stopped Miner---")
             self.tray.update(icon="icons/pickaxe_off.ico")
-            keyboard.press_and_release('ctrl+shift+alt+l')
+            keyboard.press_and_release(self.afterburner_idle)
 
     def pause(self):
         self.is_paused = True
@@ -76,6 +79,10 @@ class Miner:
 
     def resume(self):
         self.is_paused = False
+
+    def open_dashboard(self):
+        if self.dashboard_url != "" or None:
+            webbrowser.open_new(self.dashboard_url)
 
 
 def main():
@@ -96,16 +103,19 @@ def main():
         miner.pause()
         miner.terminated = True
 
-    def tray_open_stats(tray):
-        webbrowser.open_new(os.environ.get("DASHBOARD"))
+    def tray_open_dashboard(tray):
+        miner.open_dashboard()
 
-    menu_options = (("Start miner", None, tray_start_miner), ("Stop miner",
-                    None, tray_stop_miner), ("Statistics", None, tray_open_stats), ("Run at Startup", None, tray_run_at_startup))
+    menu_options = [("Start miner", None, tray_start_miner), ("Stop miner",
+                    None, tray_stop_miner), ("Run at Startup", None, tray_run_at_startup)]
+    if os.environ.get("DASHBOARD_URL") != "" or None:
+        menu_options.insert(2, ("Miner Dashboard", None, tray_open_dashboard))
+    menu_options = tuple(menu_options)
     systray = SysTrayIcon("icons/pickaxe.ico", "AdaptiveMiner",
                           menu_options, on_quit=tray_quit)
     systray.start()
 
-    check_freq = os.environ.get("CHECK_FREQ")
+    check_freq = int(os.environ.get("CHECK_FREQ"))
     triggering_processes = os.environ.get("EXES").split(";")
     miner = Miner(
         fr"{os.environ.get('MINER_PATH')}", systray)
