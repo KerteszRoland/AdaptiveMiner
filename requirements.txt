@@ -1,0 +1,5 @@
+infi.systray==0.1.12
+keyboard==0.13.5
+psutil==5.9.0
+python-dotenv==0.19.2
+winshell==0.6
