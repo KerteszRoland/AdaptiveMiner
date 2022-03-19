@@ -1,5 +1,7 @@
 # AdaptiveMiner
 
+### ONLY WINDOWS (10 tested)
+
 ## Features:
 - Automatic miner start/stop, when you quit/launch an exe
 - Automatic miner shutdown, when you launch an exe
