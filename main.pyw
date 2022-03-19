@@ -1,5 +1,7 @@
+import math
 from infi.systray import SysTrayIcon
 from time import sleep
+from datetime import datetime, timedelta
 import psutil
 from subprocess import CREATE_NO_WINDOW
 import os
@@ -9,9 +11,7 @@ import webbrowser
 import winshell
 from dotenv import load_dotenv
 import keyboard
-
-
-load_dotenv()
+import json
 
 
 def kill_proc_tree(pid, sig=signal.SIGTERM, include_parent=True,
@@ -43,6 +43,10 @@ def is_any_triggering_process_is_running(triggering_processes):
     return any(is_process_in_processes(proc) for proc in triggering_processes)
 
 
+def now_time():
+    return datetime.now().strftime("%d/%m - %H:%M")
+
+
 class Miner:
     def __init__(self, miner_path, tray):
         self.miner_path = Path(miner_path)
@@ -53,29 +57,38 @@ class Miner:
         self.dashboard_url = os.environ.get("DASHBOARD_URL")
         self.afterburner_miner = os.environ.get("AFTERBURNER_MINER_SHORTCUT")
         self.afterburner_idle = os.environ.get("AFTERBURNER_IDLE_SHORTCUT")
+        self.mined_time = timedelta()
+        self.miner_uptime = timedelta()
+        self.miner_started_at = None
 
     def start(self):
         if self.miner_proc == None and not self.is_paused:
-            command = [f"{self.miner_path}"]
+            self.load_mined_time()
+            command = [self.miner_path]
             self.miner_proc = psutil.Popen(
                 command, stdout=None, shell=True, creationflags=CREATE_NO_WINDOW)
-            print("---Started Miner---")
+            print("---Started Miner---", now_time())
             self.tray.update(icon="icons/pickaxe_on.ico")
             keyboard.press_and_release(self.afterburner_miner)
+            self.miner_started_at = datetime.now()
 
     def stop(self):
         if self.miner_proc != None:
             kill_proc_tree(self.miner_proc.pid)
             self.miner_proc = None
-            print("---Stopped Miner---")
-            self.tray.update(icon="icons/pickaxe_off.ico")
+            print("---Stopped Miner---", now_time())
+            self.tray.update(icon="icons/pickaxe_off.ico",
+                             hover_text="AdaptiveMiner - Stopped")
             keyboard.press_and_release(self.afterburner_idle)
+            self.mined_time += self.miner_uptime
+            self.save_mined_time()
+            self.miner_uptime = timedelta()
 
     def pause(self):
         self.is_paused = True
         self.stop()
-        print("---Paused Miner---")
-        self.tray.update(icon="icons/pickaxe_pause.ico")
+        self.tray.update(icon="icons/pickaxe_pause.ico",
+                         hover_text="AdaptiveMiner - Paused")
 
     def resume(self):
         self.is_paused = False
@@ -84,8 +97,28 @@ class Miner:
         if self.dashboard_url != "" or None:
             webbrowser.open_new(self.dashboard_url)
 
+    def refresh_miner_uptime(self):
+        if self.miner_started_at != None:
+            self.miner_uptime = datetime.now()-self.miner_started_at
+            self.tray.update(
+                hover_text=f"AdaptiveMiner - Mining\nUptime: \
+                    {self.miner_uptime.days}d:{math.floor(self.miner_uptime.seconds/60/60)}h:{math.floor(self.miner_uptime.seconds/60)}m\nTotal: {self.mined_time.days}d:{math.floor(self.mined_time.seconds/60/60)}h:{math.floor(self.mined_time.seconds/60)}m")
+
+    def save_mined_time(self):
+        data = {"seconds": self.mined_time.total_seconds()}
+        with open("mined_time.json", "w") as f:
+            json.dump(data, f)
+
+    def load_mined_time(self):
+        if "mined_time.json" in os.listdir():
+            with open("mined_time.json", "r") as f:
+                self.mined_time = timedelta(seconds=json.load(f)["seconds"])
+
 
 def main():
+    load_dotenv()
+    print("---Launched AdaptiveMiner---", now_time())
+
     def tray_run_at_startup(tray):
         path = fr"C:\Users\{os.getlogin()}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\AdaptiveMiner.lnk"
         name = "main.pyw"
@@ -93,10 +126,10 @@ def main():
         winshell.CreateShortcut(path, this_file_path, Arguments="", StartIn=os.path.abspath(
             '.'), Icon=(os.path.abspath('./icons/pickaxe.ico'), 0), Description="AdaptiveMinerBat")
 
-    def tray_stop_miner(tray):
+    def tray_pause_miner(tray):
         miner.pause()
 
-    def tray_start_miner(tray):
+    def tray_resume_miner(tray):
         miner.resume()
 
     def tray_quit(tray):
@@ -106,8 +139,8 @@ def main():
     def tray_open_dashboard(tray):
         miner.open_dashboard()
 
-    menu_options = [("Start miner", None, tray_start_miner), ("Stop miner",
-                    None, tray_stop_miner), ("Run at Startup", None, tray_run_at_startup)]
+    menu_options = [("Resume miner", None, tray_resume_miner), ("Pause miner",
+                    None, tray_pause_miner), ("Run at Startup", None, tray_run_at_startup)]
     if os.environ.get("DASHBOARD_URL") != "" or None:
         menu_options.insert(2, ("Miner Dashboard", None, tray_open_dashboard))
     menu_options = tuple(menu_options)
@@ -127,6 +160,7 @@ def main():
                     miner.stop()
                 else:
                     miner.start()
+                    miner.refresh_miner_uptime()
                 sleep(check_freq)
     except Exception as e:
         miner.pause()
