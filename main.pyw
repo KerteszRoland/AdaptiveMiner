@@ -100,9 +100,9 @@ class Miner:
     def refresh_miner_uptime(self):
         if self.miner_started_at != None:
             self.miner_uptime = datetime.now()-self.miner_started_at
+
             self.tray.update(
-                hover_text=f"AdaptiveMiner - Mining\nUptime: \
-                    {self.miner_uptime.days}d:{math.floor(self.miner_uptime.seconds/60/60)}h:{math.floor(self.miner_uptime.seconds/60)}m\nTotal: {self.mined_time.days}d:{math.floor(self.mined_time.seconds/60/60)}h:{math.floor(self.mined_time.seconds/60)}m")
+                hover_text=f"AdaptiveMiner - Mining\nUptime:{str(self.miner_uptime).split('.')[0]}\nTotal: {str(self.mined_time+self.miner_uptime).split('.')[0]}")
 
     def save_mined_time(self):
         data = {"seconds": self.mined_time.total_seconds()}
