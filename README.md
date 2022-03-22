@@ -10,7 +10,11 @@
 - View Miner dashboard
 - Track mined time and current mining session
 
- 
+## Showcase
+
+https://user-images.githubusercontent.com/64317447/159583847-6ac43cd0-5548-49e9-92fb-b756d634815b.mp4
+
+
 ## Setup:
 -	### Download:
 	-	[Zip](https://github.com/Orangeman69/AdaptiveMiner/archive/refs/heads/master.zip) 
