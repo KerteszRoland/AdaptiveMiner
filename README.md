@@ -11,6 +11,7 @@
 - Track mined time and current mining session
 
 ## Showcase
+I launched osu! game, then the miner stopped, when I quit the miner started. Then I showed all the features.
 
 https://user-images.githubusercontent.com/64317447/159583847-6ac43cd0-5548-49e9-92fb-b756d634815b.mp4
 
