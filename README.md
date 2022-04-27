@@ -28,7 +28,7 @@ https://user-images.githubusercontent.com/64317447/159583847-6ac43cd0-5548-49e9-
 	MINER_PATH: A path to your miner bat file's shortcut  
 	EXES: Your programs exe's that you want to check seperated by semicolons  
 	DASHBOARD_URL: If your miner provides a local dashboard you can put the url here  
-	CHECK_FREQ: Running program check frequency in seconds
+	CHECK_FREQ: Running program check frequency in seconds  
 	AFTERBURNER_MINER_SHORTCUT: Keyboard shortcut to change Afterburner profile to miner profile (ctrl+shift+alt+k)  
 	AFTERBURNER_IDLE_SHORTCUT: Keyboard shortcut to change Afterburner profile to idle profile (ctrl+shift+alt+l)  
 -	### Open main.pyw script by double click (You should see the AdaptiveMiner icon in your tray)
